@@ -1,3 +1,7 @@
+import pytest
+
+from testrail_api import APIClient
+
 URL = None
 USER = None
 PASSWORD = None
@@ -40,15 +44,16 @@ def pytest_addoption(parser):
     )
 
 
+@pytest.hookimpl
 def pytest_configure(config):
     global URL, USER, PASSWORD
-    try:
+    try:  # trying to receive params from command line arguments
         URL = config.getoption('testrail_url', skip=True)
         USER = config.getoption('testrail_user', skip=True)
         PASSWORD = config.getoption('testrail_pass', skip=True)
     except:
         pass
-    if not all([URL, USER, PASSWORD]):  # receiving settings from pytest.ini
+    if not all([URL, USER, PASSWORD]):  # if not already defined before, trying receiving settings from pytest.ini
         pytest_ini = config.inicfg
         if pytest_ini:
             try:
@@ -59,4 +64,28 @@ def pytest_configure(config):
                 if not all([URL, USER, PASSWORD]):
                     raise ConfigurationException('TestRail API connection params doesnt specify properly')
             except Exception:
-                raise ConfigurationException('pytest.ini doesnt contains [testrail] section')
+                raise ConfigurationException('pytest.ini section [testrail] doesnt configured properly')
+        else:
+            raise ConfigurationException('pytest.ini doesnt contains [testrail] section')
+
+
+@pytest.hookimpl
+def pytest_collection_modifyitems(config, items):
+    run_options = config.getoption('suite')
+    if run_options:
+        project_id = int(run_options.split(':')[0])
+        suites = [int(i) for i in run_options.split(':')[-1].split(',')]
+        client = APIClient(URL)
+        client.user = USER
+        client.password = PASSWORD
+        cases = list()
+        for suite in suites:
+            cases.extend(client.get_cases_for_suite(project_id, suite))
+        tests = []
+        for item in items:
+            if item.keywords._markers.get('case_id'):
+                for val in item.keywords._markers.get('case_id').args:
+                    tests.append((item, val))
+        case_ids_to_run = [item.get('id') for item in cases]
+        test_to_remove = list(filter(lambda test: test[1] not in case_ids_to_run, tests))
+        [items.remove(to_remove_test[0]) for to_remove_test in test_to_remove]

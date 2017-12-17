@@ -94,6 +94,9 @@ class APIClient:
 
         return result
 
+    def get_cases_for_suite(self, project_id: int, suite_id):
+        return self.send_get(f'get_cases/{project_id}&suite_id={suite_id}')
+
 
 class APIError(Exception):
     pass
