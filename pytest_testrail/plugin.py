@@ -87,5 +87,5 @@ def pytest_collection_modifyitems(config, items):
                 for val in item.keywords._markers.get('case_id').args:
                     tests.append((item, val))
         case_ids_to_run = [item.get('id') for item in cases]
-        test_to_remove = list(filter(lambda test: test[1] not in case_ids_to_run, tests))
-        [items.remove(to_remove_test[0]) for to_remove_test in test_to_remove]
+        tests_to_remove = list(filter(lambda test: test[1] not in case_ids_to_run, tests))
+        [items.remove(item_to_remove[0]) for item_to_remove in tests_to_remove]
