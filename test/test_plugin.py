@@ -1,4 +1,4 @@
-from decorators import case_id
+from pytest_testrail.decorators import case_id
 
 
 @case_id(8316)

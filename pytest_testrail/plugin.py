@@ -1,6 +1,6 @@
 import pytest
 
-from testrail_api import APIClient
+from pytest_testrail.testrail_api import APIClient
 
 URL = None
 USER = None

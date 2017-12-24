@@ -1,3 +1,5 @@
 .idea/
+.cache/
 venv/
 pytest_testrail.egg-info/
+__pycache__/
